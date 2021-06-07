@@ -1,0 +1,71 @@
+version: '3'
+services:
+    web:
+        image: webdevops/php-apache-dev:7.4
+        container_name: web
+        restart: "no"
+        user: root
+        environment:
+          - WEB_ALIAS_DOMAIN=magento.local
+          - WEB_DOCUMENT_ROOT=/app
+          - PHP_DATE_TIMEZONE=EST
+          - PHP_DISPLAY_ERRORS=1
+          - PHP_MEMORY_LIMIT=4G
+          - PHP_MAX_EXECUTION_TIME=18000
+          - PHP_POST_MAX_SIZE=500M
+          - PHP_UPLOAD_MAX_FILESIZE=1024M
+          - COMPOSER_VERSION=2
+          - PHP_DEBUGGER=none # comment this parameter to enable xDebug by default
+          - XDEBUG_START_WITH_REQUEST=yes
+          - XDEBUG_REMOTE_HOST=host.docker.internal
+          - XDEBUG_REMOTE_PORT=9000
+          - XDEBUG_REMOTE_CONNECT_BACK=0
+          - XDEBUG_REMOTE_AUTOSTART=1
+          - POSTFIX_RELAYHOST=[mailhog_wogar]:1025
+        volumes:
+          - ./:/app:cached
+          # Host mounts with performance penalties
+          - ~/.composer:/root/.composer:delegated # this is to have the repo credentials ported from the host machine to the container
+          - ./app/code:/app/app/code:delegated
+          - ./app/design:/app/app/design:delegated
+          - ./app/etc:/app/app/etc:delegated
+          - ./var/log:/app/var/log:delegated
+          - ./var/report:/app/var/report:delegated
+          - ./composer.json:/app/composer.json:delegated
+          - ./composer.lock:/app/composer.lock:delegated
+        ports:
+          - "80:80"
+          - "443:443"
+          - "32823:22"          
+        links:
+          - mysql8
+          - elasticsearch
+          - redis
+    mysql8:
+        image: mysql:8
+        container_name: mysql8
+        restart: "no"
+        ports:
+          - "3306:3306"
+        environment:
+          - MYSQL_ROOT_PASSWORD=root
+          - MYSQL_DATABASE=wogar
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
+        container_name: elasticsearch
+        environment: 
+          - "discovery.type=single-node"
+        restart: "no"
+        ports: 
+          - "9200:9200"
+          - "9300:9300"
+    redis:
+        image: redis
+        container_name: redis_wogar
+        restart: "no"
+    mailhog:  # Emails can be viisualize at http://localhost:8025/
+        image: mailhog/mailhog
+        container_name: mailhog
+        ports:
+          - 1025:1025
+          - 8025:8025
