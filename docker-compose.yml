@@ -23,7 +23,7 @@ services:
           - XDEBUG_REMOTE_AUTOSTART=1
           - POSTFIX_RELAYHOST=[mailhog_wogar]:1025
         volumes:
-          - ./:/app:cached
+          - ./magento:/app:cached
           # Host mounts with performance penalties
           - ~/.composer:/root/.composer:delegated # this is to have the repo credentials ported from the host machine to the container
           - ./app/code:/app/app/code:delegated
